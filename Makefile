@@ -4,7 +4,7 @@ run:
 	python run.py
 
 test:
-	pytest -v
+	xvfb-run --auto-servernum pytest -v
 
 coverage:
 	pytest --cov=wf_game_tracker -v --cov-report=term-missing
