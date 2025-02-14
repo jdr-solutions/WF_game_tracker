@@ -25,3 +25,7 @@ Thumbs.db
 
 # Ignore VS Code settings (optional)
 .vscode/
+
+# Test coverage
+.coverage
+.pytest_cache/

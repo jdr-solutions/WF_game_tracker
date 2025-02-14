@@ -9,6 +9,7 @@ import os
 from wf_game_tracker.master_data import MASTER_TABLE, deep_copy_master_table
 from wf_game_tracker.deck_tab import DeckTab
 
+
 class DeckTrackerApp(tk.Tk):
     def __init__(self):
         super().__init__()
@@ -30,7 +31,9 @@ class DeckTrackerApp(tk.Tk):
         # Bind scrolling events to all deck tabs in the notebook
         self.notebook.bind("<<NotebookTabChanged>>", self._update_scroll_binding)
 
-        new_deck_btn = tk.Button(self, text="Create New Deck", command=self.handle_add_new_deck)
+        new_deck_btn = tk.Button(
+            self, text="Create New Deck", command=self.handle_add_new_deck
+        )
         new_deck_btn.pack(side=tk.BOTTOM, pady=5)
         default_save = "default_decks.json"
         if os.path.exists(default_save):
@@ -46,7 +49,7 @@ class DeckTrackerApp(tk.Tk):
 
         # Otherwise, get the corresponding DeckTab
         deck_tab_obj = self.deck_tabs[current_tab_idx]
-        deck_tab_obj.canvas.yview_scroll(int(-1*(event.delta/120)), "units")
+        deck_tab_obj.canvas.yview_scroll(int(-1 * (event.delta / 120)), "units")
         return "break"
 
     def _on_mousewheel_other(self, event):
@@ -64,11 +67,11 @@ class DeckTrackerApp(tk.Tk):
     def _update_scroll_binding(self, event):
         """Ensure mouse scrolling affects the currently selected tab."""
         current_tab_idx = self.notebook.index("current")
-        
+
         # If no tabs exist, do nothing
         if len(self.deck_tabs) == 0:
             return
-        
+
         # Get the currently selected DeckTab
         deck_tab_obj = self.deck_tabs[current_tab_idx]
 
@@ -78,9 +81,12 @@ class DeckTrackerApp(tk.Tk):
         self.unbind_all("<Button-5>")
 
         self.bind_all("<MouseWheel>", deck_tab_obj._on_mousewheel)
-        self.bind_all("<Button-4>", deck_tab_obj._on_mousewheel)  # Linux/macOS Scroll Up
-        self.bind_all("<Button-5>", deck_tab_obj._on_mousewheel)  # Linux/macOS Scroll Down
-
+        self.bind_all(
+            "<Button-4>", deck_tab_obj._on_mousewheel
+        )  # Linux/macOS Scroll Up
+        self.bind_all(
+            "<Button-5>", deck_tab_obj._on_mousewheel
+        )  # Linux/macOS Scroll Down
 
     def create_menu(self):
         menubar = tk.Menu(self)
@@ -102,27 +108,35 @@ class DeckTrackerApp(tk.Tk):
         for loaded_deck in loaded_decks:
             merged_deck = {
                 "deck_name": loaded_deck.get("deck_name", "Unnamed Deck"),
-                "factions": []
+                "factions": [],
             }
 
             # Merge each faction in MASTER_TABLE
             for master_faction in MASTER_TABLE:
                 # Check if this faction exists in the loaded deck
                 matching_faction = next(
-                    (f for f in loaded_deck["factions"] if f["faction_name"] == master_faction["faction_name"]),
-                    None
+                    (
+                        f
+                        for f in loaded_deck["factions"]
+                        if f["faction_name"] == master_faction["faction_name"]
+                    ),
+                    None,
                 )
                 if matching_faction:
                     # Merge warlords
                     merged_faction = {
                         "faction_name": matching_faction["faction_name"],
-                        "warlords": []
+                        "warlords": [],
                     }
                     for master_warlord in master_faction["warlords"]:
                         # Check if this warlord exists in the loaded faction
                         matching_warlord = next(
-                            (w for w in matching_faction["warlords"] if w["warlord_name"] == master_warlord["warlord_name"]),
-                            None
+                            (
+                                w
+                                for w in matching_faction["warlords"]
+                                if w["warlord_name"] == master_warlord["warlord_name"]
+                            ),
+                            None,
                         )
                         if matching_warlord:
                             # Use the existing warlord's stats
@@ -146,10 +160,7 @@ class DeckTrackerApp(tk.Tk):
         # thread.start()
 
     def create_new_deck(self):
-        new_deck = {
-            "deck_name": "New Deck",
-            "factions": deep_copy_master_table()
-        }
+        new_deck = {"deck_name": "New Deck", "factions": deep_copy_master_table()}
         self.decks.append(new_deck)
         self.after(0, lambda: self.finalize_new_tab(new_deck))
 
@@ -164,7 +175,7 @@ class DeckTrackerApp(tk.Tk):
     def open_file(self):
         filename = filedialog.askopenfilename(
             title="Open Save File",
-            filetypes=[("JSON files", "*.json"), ("All files", "*.*")]
+            filetypes=[("JSON files", "*.json"), ("All files", "*.*")],
         )
         if filename:
             self.load_data(filename)
@@ -173,14 +184,13 @@ class DeckTrackerApp(tk.Tk):
         try:
             with open(filename, "r", encoding="utf-8") as f:
                 loaded_decks = json.load(f)
-            
+
             # Merge loaded data with MASTER_TABLE
             self.decks = self.merge_with_master_table(loaded_decks)
             self.current_file = filename
             self.build_tabs()
         except Exception as e:
             messagebox.showerror("Load Error", str(e))
-
 
     def save_file(self):
         if self.current_file:
@@ -192,7 +202,7 @@ class DeckTrackerApp(tk.Tk):
         filename = filedialog.asksaveasfilename(
             title="Save File As",
             defaultextension=".json",
-            filetypes=[("JSON files", "*.json"), ("All files", "*.*")]
+            filetypes=[("JSON files", "*.json"), ("All files", "*.*")],
         )
         if filename:
             self.write_data(filename)
@@ -220,24 +230,20 @@ class DeckTrackerApp(tk.Tk):
 
         for deck_index, deck_obj in enumerate(self.decks):
             deck_name = deck_obj.get("deck_name", f"Deck {deck_index+1}")
-            
+
             # Create a DeckTab directly in the notebook
             deck_tab = DeckTab(self.notebook, deck_obj, self)
-            
+
             # Add DeckTab as a new tab
             self.notebook.add(deck_tab, text=deck_name)
             self.deck_tabs.append(deck_tab)
-
 
     def add_new_deck(self):
         """
         Create a new deck with a copy of the MASTER_TABLE structure,
         set default name, then rebuild tabs to display it.
         """
-        new_deck = {
-            "deck_name": "New Deck",
-            "factions": deep_copy_master_table()
-        }
+        new_deck = {"deck_name": "New Deck", "factions": deep_copy_master_table()}
         self.decks.append(new_deck)
         self.build_tabs()
 
