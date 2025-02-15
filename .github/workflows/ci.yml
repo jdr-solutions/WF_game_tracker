@@ -4,11 +4,9 @@ on:
   push:
     branches:
       - main
-      - develop
   pull_request:
     branches:
       - main
-      - develop
 
 jobs:
   test-lint:
@@ -23,29 +21,26 @@ jobs:
         uses: actions/setup-python@v5
         with:
           python-version: "3.12"
+          cache: "pip"
 
       - name: Install Dependencies
         run: |
           python -m venv venv
-          source venv/bin/activate
-          pip install -r requirements.txt
+          venv/bin/pip install -r requirements.txt
+          # Install xvfb and python3-tk only if running with act locally
+          if [ "$ACT" = "true" ]; then
+            sudo apt-get update && sudo apt-get install -y xvfb python3-tk
+          fi
 
       - name: Check Formatting (Black)
         run: |
-          source venv/bin/activate
-          make format
+          venv/bin/black --check .
 
       - name: Run Linting (Flake8)
         run: |
-          source venv/bin/activate
-          make lint
+          venv/bin/flake8 .
 
       - name: Run Tests with Virtual Display
         run: |
-          source venv/bin/activate
-          xvfb-run --auto-servernum pytest -v
+          xvfb-run --auto-servernum venv/bin/pytest -v
 
-      - name: Run Coverage Tests
-        run: |
-          source venv/bin/activate
-          xvfb-run --auto-servernum make coverage
