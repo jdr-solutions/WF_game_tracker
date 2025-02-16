@@ -21,18 +21,11 @@ class DeckTab(tk.Frame):
         self.label_refs = {}
         self.faction_wr_labels = {}
 
-        # Create the UI elements before binding scroll events
-        self.inner_frame = ttk.Frame(self)
-        self.inner_frame.pack(fill=tk.BOTH, expand=True)
-
-        # Initialize scrolling
-        self.create_scrollable_container()
+        # Build the UI
+        self.build_ui()
 
         # Now that canvas exists, bind scroll wheel
         self._bind_scroll_wheel()
-
-        # Build the UI
-        self.build_ui()
 
     def build_ui(self):
         title_frame = ttk.Frame(self)
@@ -75,7 +68,6 @@ class DeckTab(tk.Frame):
         self.inner_frame_id = self.canvas.create_window(
             (0, 0), window=self.inner_frame, anchor="nw"
         )
-        # self.canvas.create_window((0, 0), window=self.inner_frame, anchor="nw")
 
         self.inner_frame.bind("<Configure>", self._on_frame_configure)
         self.canvas.bind("<Configure>", self._on_canvas_resize)
@@ -421,17 +413,13 @@ class DeckTab(tk.Frame):
 
     def _on_canvas_resize(self, event):
         """Ensures the canvas resizes properly to fit the content."""
-        self.canvas.itemconfig(self.inner_frame_id, width=event.width)
-
-        # Force frame inside canvas to take correct height
         self.inner_frame.update_idletasks()
         self.canvas.itemconfig(
             self.inner_frame_id,
-            width=self.canvas.winfo_width(),
-            height=self.inner_frame.winfo_reqheight(),  # Dynamically adjust height
+            height=self.inner_frame.winfo_reqheight(),  # Only adjust height
         )
 
-        # Ensure scrollregion is updated correctly
+        # Ensure scroll region is updated correctly
         self.canvas.configure(scrollregion=self.canvas.bbox("all"))
 
     def _on_mousewheel(self, event):
@@ -453,40 +441,12 @@ class DeckTab(tk.Frame):
 
     def _on_frame_configure(self, event=None):
         """Ensures the inner frame expands correctly within the canvas."""
-        self.canvas.configure(
-            scrollregion=self.canvas.bbox("all")
-        )  # Update scroll region
+        self.inner_frame.update_idletasks()  # Ensure content sizes are updated
+        inner_width = self.inner_frame.winfo_reqwidth()  # Get required width
+        inner_height = self.inner_frame.winfo_reqheight()  # Get required height
 
-        # Ensure the frame inside the canvas expands fully
-        self.canvas.itemconfig(
-            self.inner_frame_id,
-            width=self.canvas.winfo_width(),
-            height=self.inner_frame.winfo_reqheight(),  # Dynamically adjust height
-        )
+        # Set the width dynamically
+        self.canvas.itemconfig(self.inner_frame_id, width=inner_width, height=inner_height)
 
-    def create_scrollable_container(self):
-        """Create a scrollable container inside DeckTab."""
-        container = ttk.Frame(self)
-        container.pack(fill=tk.BOTH, expand=True)
-        container.pack_propagate(False)
-
-        self.canvas = tk.Canvas(container)  # Initialize canvas
-        self.canvas.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
-
-        # Create vertical scrollbar
-        self.vsb = ttk.Scrollbar(
-            container, orient="vertical", command=self.canvas.yview
-        )
-        self.vsb.pack(side=tk.RIGHT, fill=tk.Y)
-
-        # Link scrollbar to canvas
-        self.canvas.configure(yscrollcommand=self.vsb.set)
-
-        # Inner frame inside the canvas
-        self.inner_frame = ttk.Frame(self.canvas)
-        self.inner_frame_id = self.canvas.create_window(
-            (0, 0), window=self.inner_frame, anchor="nw"
-        )
-
-        self.inner_frame.bind("<Configure>", self._on_frame_configure)
-        self.canvas.bind("<Configure>", self._on_canvas_resize)
+        # Ensure the canvas scroll region is updated
+        self.canvas.configure(scrollregion=self.canvas.bbox("all"))
