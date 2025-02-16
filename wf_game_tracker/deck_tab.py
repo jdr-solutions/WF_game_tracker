@@ -446,7 +446,9 @@ class DeckTab(tk.Frame):
         inner_height = self.inner_frame.winfo_reqheight()  # Get required height
 
         # Set the width dynamically
-        self.canvas.itemconfig(self.inner_frame_id, width=inner_width, height=inner_height)
+        self.canvas.itemconfig(
+            self.inner_frame_id, width=inner_width, height=inner_height
+        )
 
         # Ensure the canvas scroll region is updated
         self.canvas.configure(scrollregion=self.canvas.bbox("all"))
